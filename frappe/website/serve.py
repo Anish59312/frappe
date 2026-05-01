@@ -11,12 +11,16 @@ from frappe.website.path_resolver import PathResolver
 
 def get_response(path=None, http_status_code=200) -> Response:
 	"""Resolves path and renders page"""
+	print(f"#### get response called, with path = {frappe.local.request.path}")
 	path = path or frappe.local.request.path
 	endpoint = path
 
 	try:
 		path_resolver = PathResolver(path, http_status_code)
 		endpoint, renderer_instance = path_resolver.resolve()
+		print(
+			f"##### PathResolver's resolve returned endpoint {endpoint}, renderer_instance {renderer_instance}"
+		)
 		return renderer_instance.render()
 
 	except Exception as e:

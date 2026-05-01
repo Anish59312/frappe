@@ -21,17 +21,21 @@ class PathResolver:
 	__slots__ = ("http_status_code", "path")
 
 	def __init__(self, path, http_status_code=None):
+		print("##### PathResolver intialised")
 		self.path = path.strip("/ ")
 		self.http_status_code = http_status_code
 
 	def resolve(self):
 		"""Return endpoint and a renderer instance that can render the endpoint."""
+		print("##### PathResolver's resolve called")
+
 		request = frappe._dict()
 		if hasattr(frappe.local, "request"):
 			request = frappe.local.request or request
 
 		# WARN: Hardcoded for better performance
 		if self.path == "desk" or self.path.startswith("desk/"):
+			print("##### hardcoded response for /desk route")
 			return "desk", TemplatePage("desk", self.http_status_code)
 
 		# check if the request url is in 404 list
@@ -39,6 +43,7 @@ class PathResolver:
 			return self.path, NotFoundPage(self.path)
 
 		try:
+			print("##### calling resolve redirect")
 			resolve_redirect(self.path, request.query_string)
 		except frappe.Redirect as e:
 			return frappe.flags.redirect_location, RedirectPage(self.path, e.http_status_code)
@@ -48,7 +53,9 @@ class PathResolver:
 				endpoint = frappe.get_attr(resolver)(self.path)
 		else:
 			try:
+				print("##### calling resolve path")
 				endpoint = resolve_path(self.path)
+				print(f"##### resolve redirect returning endpiont {endpoint}")
 			except werkzeug.routing.exceptions.RequestRedirect as e:
 				frappe.flags.redirect_location = e.new_url
 				return frappe.flags.redirect_location, RedirectPage(e.new_url, e.code)
@@ -63,10 +70,18 @@ class PathResolver:
 			PrintPage,
 			ListPage,
 		]
+		print(f"##### loop over possible renderers {renderers}")
 
 		for renderer in renderers:
+			print(f"##### initialize with render_instanace = renderer({endpoint}, {self.http_status_code})")
+
 			renderer_instance = renderer(endpoint, self.http_status_code)
 			if renderer_instance.can_render():
+				print(
+					"##### check if renderer_instance.can_render() is true, if yes return that endpoint and renderer_instance"
+				)
+				print(f"#### here we render by {renderer_instance}")
+
 				return endpoint, renderer_instance
 
 		return endpoint, NotFoundPage(endpoint)
@@ -96,6 +111,7 @@ class PathResolver:
 		return custom_renderers
 
 
+# TODO: understand
 def resolve_redirect(path, query_string=None):
 	"""
 	Resolve redirects from hooks
@@ -193,11 +209,15 @@ def resolve_path(path):
 	frappe.local.path = path
 
 	if path != "index":
+		print(
+			"##### calling resolve from map\n transform dynamic route to a static one from hooks and route defined in doctype"
+		)
 		path = resolve_from_map(path)
 
 	return path
 
 
+# TODO: understand
 def resolve_from_map(path):
 	"""transform dynamic route to a static one from hooks and route defined in doctype"""
 	rules = [

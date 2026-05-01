@@ -637,16 +637,20 @@ def validate_auth():
 	"""
 	Authenticate and sets user for the request.
 	"""
+	print("#### authenticate user")
 	authorization_header = frappe.get_request_header("Authorization", "").split(" ")
 
+	print("##### authenticatoin by authorization header")
 	if len(authorization_header) == 2:
 		validate_oauth(authorization_header)
 		validate_auth_via_api_keys(authorization_header)
 
+	print("##### run auth_hooks")
 	validate_auth_via_hooks()
 
 	# If login via bearer, basic or keypair didn't work then authentication failed and we
 	# should terminate here.
+	print("#### if frappe.session.user is not set you may get authentication error")
 	if len(authorization_header) == 2 and frappe.session.user in ("", "Guest"):
 		raise frappe.AuthenticationError
 

@@ -556,6 +556,7 @@ def cache_html(func):
 
 
 def build_response(path, data, http_status_code, headers: dict | None = None):
+	print("### build_response called")
 	# build response
 	response = Response()
 	response.data = set_content_type(response, data, path)

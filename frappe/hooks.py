@@ -69,6 +69,7 @@ website_redirects = [
 	{"source": r"/app/(.*)", "target": r"/desk/\1", "forward_query_parameters": True},
 	{"source": "/apps", "target": "/desk"},
 	{"source": "/app", "target": "/desk"},
+	{"source": "/frappe", "target": "https://neal.fun/life-checklist/"},
 ]
 
 base_template = "templates/base.html"

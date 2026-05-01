@@ -73,6 +73,7 @@ import frappe.website.website_generator  # web page doctypes
 Request.max_form_memory_size = None
 
 
+# TODO: understand
 def after_response_wrapper(app):
 	"""Wrap a WSGI application to call after_response hooks after we have responded.
 
@@ -96,12 +97,19 @@ def after_response_wrapper(app):
 @after_response_wrapper
 @Request.application
 def application(request: Request):
+	print(f"## REQUEST STARTED AT {request.path}")
+	print("### Application")
 	response = None
 
 	try:
 		init_request(request)
 
 		validate_auth()
+
+		print(f"#### your request has - request.method : {request.method}, request.path {request.path} ")
+		print(
+			"#### reqeust will be treated based on /api/ /backup/ /private/files/ and the remaining by get_response() method"
+		)
 
 		if request.method == "OPTIONS":
 			response = Response()
@@ -147,6 +155,7 @@ def application(request: Request):
 			db.rollback(chain=True)
 
 	else:
+		print("#### sync database if no exception occurred")
 		sync_database()
 
 	finally:
@@ -155,12 +164,14 @@ def application(request: Request):
 		# try..catch block like this finally block needs to be handled appropriately.
 
 		try:
+			print("#### run after request hooks")
 			run_after_request_hooks(request, response)
 		except Exception:
 			# We can not handle exceptions safely here.
 			frappe.logger().error("Failed to run after request hook", exc_info=True)
-
+	print("#### run after request hooks")
 	log_request(request, response)
+	print("#### run process response")
 	process_response(response)
 
 	return response
@@ -175,6 +186,7 @@ def run_after_request_hooks(request, response):
 
 
 def init_request(request):
+	print("### INIT REQUEST")
 	frappe.local.request = request
 	frappe.local.request.after_response = CallbackManager()
 
@@ -186,7 +198,7 @@ def init_request(request):
 	if not (frappe.local.conf and frappe.local.conf.db_name):
 		# site does not exist
 		raise NotFound
-
+	print("#### Check for maintenance_mode")
 	frappe.connect(set_admin_as_user=False)
 	if frappe.local.conf.maintenance_mode:
 		if frappe.local.conf.allow_reads_during_maintenance:
@@ -194,11 +206,13 @@ def init_request(request):
 		else:
 			raise frappe.SessionStopped("Session Stopped")
 
+	print("#### check if this is a upload file request")
 	if request.path.startswith("/api/method/upload_file"):
 		from frappe.core.api.file import get_max_file_size
 
 		request.max_content_length = get_max_file_size()
 	else:
+		print("##### if not set the the max content length")
 		request.max_content_length = cint(frappe.local.conf.get("max_file_size")) or 25 * 1024 * 1024
 	make_form_dict(request)
 
@@ -247,6 +261,7 @@ def log_request(request, response):
 NO_CACHE_HEADERS = {"Cache-Control": "no-store,no-cache,must-revalidate,max-age=0"}
 
 
+# TODO: understand
 def process_response(response: Response):
 	if not response:
 		return
@@ -325,6 +340,7 @@ def set_authenticate_headers(response: Response):
 
 
 def make_form_dict(request: Request):
+	print("#### make a form dict - get all request arguments")
 	request_data = request.get_data(as_text=True)
 	if request_data and request.is_json:
 		try:
@@ -344,6 +360,8 @@ def make_form_dict(request: Request):
 		frappe.local.form_dict["data"] = args
 	else:
 		frappe.throw(_("Invalid request arguments"))
+
+	print("#### form dict value frappe.local.form_dict", frappe.local.form_dict)
 
 
 @handle_does_not_exist_error
