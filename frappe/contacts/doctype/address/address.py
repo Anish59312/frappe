@@ -276,7 +276,12 @@ def address_query(
 	if link_name := filters.pop("link_name", None):
 		_filters.append(["Dynamic Link", "link_name", "=", link_name])
 
-	_filters.extend([key, "=", value] for key, value in filters.items())
+	# Handle remaining filters with support for operators
+	for key, value in filters.items():
+		if isinstance(value, (list, tuple)) and len(value) == 2:
+			_filters.append(["Address", key, value[0], value[1]])
+		else:
+			_filters.append(["Address", key, "=", value])
 
 	return search_widget(
 		"Address", txt, filters=_filters, searchfield=searchfield, start=start, page_length=page_len
