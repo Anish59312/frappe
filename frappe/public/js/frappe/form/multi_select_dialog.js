@@ -323,14 +323,9 @@ frappe.ui.form.MultiSelectDialog = class MultiSelectDialog {
 
 	get_custom_filters() {
 		if (this.add_filters_group && this.filter_group) {
-			return this.filter_group.get_filters().reduce((acc, filter) => {
-				return Object.assign(acc, {
-					[filter[1]]: [filter[2], filter[3]],
-				});
-			}, {});
-		} else {
-			return {};
+			return this.filter_group.get_filters().map((f) => [f[0], f[1], f[2], f[3]]);
 		}
+		return [];
 	}
 
 	bind_events() {
@@ -583,10 +578,16 @@ frappe.ui.form.MultiSelectDialog = class MultiSelectDialog {
 	}
 
 	get_args_for_search() {
-		let [filters, filter_fields] = this.get_filters_from_setters();
+		let [setter_filters, filter_fields] = this.get_filters_from_setters();
+		console.log("setter filters", setter_filters);
 
-		let custom_filters = this.get_custom_filters();
-		Object.assign(filters, custom_filters);
+		const filters = Object.entries(setter_filters).map(([field, v]) =>
+			Array.isArray(v) ? [this.doctype, field, v[0], v[1]] : [this.doctype, field, "=", v]
+		);
+
+		const custom_filters = this.get_custom_filters();
+
+		filters.push(...custom_filters);
 
 		return {
 			doctype: this.doctype,
