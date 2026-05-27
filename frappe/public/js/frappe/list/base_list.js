@@ -517,6 +517,8 @@ frappe.views.BaseList = class BaseList {
 
 	refresh() {
 		let args = this.get_call_args();
+		console.log("see the unnecessary fields being called in list view");
+		console.log("args: ", args);
 		if (this.no_change(args)) {
 			// console.log('throttled');
 			return Promise.resolve();

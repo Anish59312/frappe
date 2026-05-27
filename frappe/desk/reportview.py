@@ -27,6 +27,7 @@ DISALLOWED_PARAMS = ("cmd", "data", "ignore_permissions", "view", "user", "csrf_
 @frappe.read_only()
 def get():
 	args = get_form_params()
+	print("ARGS WHEN LIST VIEW IS GETTING CALLED: ", args)
 	# If virtual doctype, get data from controller get_list method
 	if is_virtual_doctype(args.doctype):
 		controller = get_controller(args.doctype)
