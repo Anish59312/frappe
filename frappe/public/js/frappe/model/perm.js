@@ -82,12 +82,7 @@ $.extend(frappe.perm, {
 
 		let perm = [{ read: 0, permlevel: 0, rights_without_if_owner: new Set() }];
 
-		if (!meta) {
-			if (frappe.boot.user.can_read.includes(doctype)) {
-				perm[0].read = 1;
-			}
-			return perm;
-		}
+		if (!meta) return perm;
 		perm = frappe.perm.get_role_permissions(meta);
 		const base_perm = perm[0];
 
