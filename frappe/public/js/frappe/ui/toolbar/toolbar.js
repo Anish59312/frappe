@@ -289,7 +289,6 @@ frappe.ui.toolbar.fetch_session_defaults = function () {
 };
 
 frappe.ui.toolbar.setup_session_defaults = function () {
-	let perms = frappe.perm.get_perm("Session Default Settings");
 	let fields = [...frappe.boot.session_defaults];
 	let d = frappe.prompt(
 		fields,
@@ -323,7 +322,10 @@ frappe.ui.toolbar.setup_session_defaults = function () {
 		__("Session Defaults"),
 		__("Save")
 	);
-	if (frappe.user_roles.includes("System Manager") || perms[0].read == 1) {
+	if (
+		frappe.user_roles.includes("System Manager") ||
+		frappe.model.can_read("Session Default Settings")
+	) {
 		d.add_custom_action(__("Configure"), () => {
 			d.hide();
 			frappe.set_route("Form", "Session Default Settings", "Session Default Settings");
